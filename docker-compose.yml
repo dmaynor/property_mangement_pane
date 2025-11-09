@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=pmap
+      - POSTGRES_USER=pmap
+      - POSTGRES_PASSWORD=pmap
+    ports:
+      - "5432:5432"
+
+  mock_appfolio:
+    build: .
+    command: uvicorn pmap.mocks.appfolio_api:app --host 0.0.0.0 --port 8001
+    volumes:
+      - ./pmap:/app/pmap
+    ports:
+      - "8001:8001"
+
+  web:
+    build: .
+    command: >
+      bash -c "
+        python -c 'from pmap.storage import init_schema; init_schema()' &&
+        uvicorn pmap.api:app --host 0.0.0.0 --port 8000
+      "
+    volumes:
+      - ./pmap:/app/pmap
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=pmap
+      - DB_USER=pmap
+      - DB_PASS=pmap
+      - APPFOLIO_API_URL=http://mock_appfolio:8001
+      - APPFOLIO_API_KEY=fake-appfolio-api-key
+    depends_on:
+      - db
+      - mock_appfolio
+
+volumes:
+  postgres_data:
