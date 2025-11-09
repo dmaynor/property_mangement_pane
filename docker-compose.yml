@@ -11,6 +11,11 @@ services:
       - POSTGRES_PASSWORD=pmap
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pmap -d pmap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mock_appfolio:
     build: .
@@ -39,8 +44,10 @@ services:
       - APPFOLIO_API_URL=http://mock_appfolio:8001
       - APPFOLIO_API_KEY=fake-appfolio-api-key
     depends_on:
-      - db
-      - mock_appfolio
+      db:
+        condition: service_healthy
+      mock_appfolio:
+        condition: service_started
 
 volumes:
   postgres_data:
