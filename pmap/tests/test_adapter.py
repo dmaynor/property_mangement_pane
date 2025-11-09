@@ -3,12 +3,16 @@
 Unit tests for adapter + normalizer.
 """
 import os
-from ..storage import init_schema, connect
+from ..storage import connect, truncate_tables
 from ..appfolio_adapter import AppFolioAdapter
 from ..event_bus import process_tuple
 
-def setup_module():
-    init_schema()
+def setup_function(function):
+    """Truncate tables before each test function."""
+    conn = connect()
+    truncate_tables(conn)
+    conn.commit()
+    conn.close()
 
 def test_pull_and_upsert_idempotent():
     ad = AppFolioAdapter()

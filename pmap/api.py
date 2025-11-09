@@ -6,6 +6,7 @@ import os
 import uuid
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from psycopg2.extras import DictCursor
 from .adapter_base import Adapter
 from .appfolio_adapter import AppFolioAdapter
 from .storage import connect, init_schema, now_iso
@@ -76,7 +77,7 @@ def reconcile(name: str):
 def events(limit: int = 50):
     conn = connect()
     try:
-        with conn.cursor() as cur:
+        with conn.cursor(cursor_factory=DictCursor) as cur:
             cur.execute(
                 "SELECT * FROM audit_events ORDER BY id DESC LIMIT %s", (limit,)
             )

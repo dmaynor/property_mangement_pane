@@ -30,6 +30,16 @@ def init_schema() -> None:
     conn.close()
 
 
+def truncate_tables(conn) -> None:
+    tables = [
+        "properties", "units", "tenants", "leases",
+        "payments", "raw_payloads", "audit_events"
+    ]
+    with conn.cursor() as cur:
+        for table in tables:
+            cur.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;")
+
+
 def checksum_of(obj: Dict[str, Any]) -> str:
     blob = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()

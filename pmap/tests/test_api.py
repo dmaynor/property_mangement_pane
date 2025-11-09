@@ -4,11 +4,15 @@ API integration tests with TestClient.
 """
 import os
 from fastapi.testclient import TestClient
-from ..storage import init_schema
+from ..storage import connect, truncate_tables
 from .. import api
 
-def setup_module():
-    init_schema()
+def setup_function(function):
+    """Truncate tables before each test function."""
+    conn = connect()
+    truncate_tables(conn)
+    conn.commit()
+    conn.close()
 
 client = TestClient(api.app)
 
